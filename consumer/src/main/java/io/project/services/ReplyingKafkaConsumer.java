@@ -13,10 +13,12 @@ public class ReplyingKafkaConsumer {
     @SendTo
     public UserRequest listen(UserRequest request) throws InterruptedException {
 
+        Thread.sleep(4000);
+
         UserRequest response = new UserRequest();
         response.setCompanyId(68L);
-        response.setCompanyName("AdiBas");
-        response.setEmail("adibas@gmail.com");
+        response.setCompanyName("GFG");
+        response.setEmail("test@gfg.com");
         response.setUserId(102L);
 
         return response;

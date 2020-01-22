@@ -34,6 +34,13 @@ spring:
  
   kafka:
       producer:
+        retries: 4
+        delivery:
+          timeout:
+            ms: 5000
+        request:
+          timeout:
+            ms: 5000
         max:
          request:
             size: 231072000     
