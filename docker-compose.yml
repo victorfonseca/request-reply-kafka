@@ -2,20 +2,51 @@ version: '3.2'
 services:
   zookeeper:
     image: wurstmeister/zookeeper
-    container_name: zookeeper 
+    container_name: zookeeper
     ports:
-      - "2181:2181"
+      - 2181:2181
     networks:
       - kafkanet 
 
+  schema-registry:
+    image: confluentinc/cp-schema-registry
+    hostname: schema-registry
+    depends_on:
+      - zookeeper
+      - kafka
+    ports:
+      - 8081:8081
+    networks:
+      - kafkanet 
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
+
+  rest-proxy:
+    image: confluentinc/cp-kafka-rest
+    container_name: rest-proxy
+    depends_on:
+      - zookeeper
+      - kafka
+      - schema-registry
+    ports:
+      - 8082:8082
+    networks:
+      - kafkanet 
+    hostname: rest-proxy
+    container_name: rest-proxy
+    environment:
+      KAFKA_REST_HOST_NAME: rest-proxy
+      KAFKA_REST_BOOTSTRAP_SERVERS: 'kafka:9092'
+      KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
+      KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+
   kafka:
-    image: wurstmeister/kafka:latest
+    image: wurstmeister/kafka
     container_name: kafka
     ports:
-      - target: 9094
-        published: 9094
-        protocol: tcp
-        mode: host
+      - 9094:9094
+      - 9092:9092
     environment:
       HOSTNAME_COMMAND: "docker info | grep ^Name: | cut -d' ' -f 2"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -31,6 +62,23 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock 
     networks:
       - kafkanet 
+
+  kafkadrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafkadrop
+    ports:
+      - 9000:9000
+    networks:
+      - kafkanet
+    depends_on:
+      - zookeeper
+      - kafka
+    links:
+      - kafka  
+    environment:
+      KAFKA_BROKERCONNECT: kafka:9092
+      JVM_OPTS: "-Xms32M -Xmx64M"
+      SERVER_SERVLET_CONTEXTPATH: "/"
       
   producer:
     image: producer
@@ -70,8 +118,6 @@ services:
     networks:
       - kafkanet       
         
-  
-  
 networks:
   kafkanet:
     driver: bridge
