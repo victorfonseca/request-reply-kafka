@@ -1,1 +1,4 @@
 /consumer/target/
+/producer/target/
+.settings
+.project
