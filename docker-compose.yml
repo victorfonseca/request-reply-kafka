@@ -31,14 +31,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock 
     networks:
       - kafkanet 
-
-  prometheus:
-     image: prom/prometheus
-     container_name: prometheus
-     networks:
-      - kafkanet
-     ports:
-      - "9090:9090"
       
   producer:
     image: producer
